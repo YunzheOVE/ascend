@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 330 96" width="330" height="96" role="img" aria-label="ascend">
+  <style>
+    .tile { fill: #0A0A0A; }
+    .mark { stroke: #FFFFFF; }
+    .word { fill: #0A0A0A; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #FFFFFF; }
+      .mark { stroke: #0A0A0A; }
+      .word { fill: #FFFFFF; }
+    }
+  </style>
+  <rect class="tile" width="96" height="96" rx="22"/>
+  <path class="mark" d="M28 60 L48 38 L68 60" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="word" x="118" y="66" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="52" font-weight="600" letter-spacing="-1.5">ascend</text>
+</svg>

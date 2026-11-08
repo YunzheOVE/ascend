@@ -1,0 +1,5 @@
+# Python's cache and local editor/agent settings
+__pycache__/
+.claude/
+
+# progress.json and solutions/ are committed on purpose, so progress follows you between machines.
