@@ -78,7 +78,10 @@
   .crumb { display:flex; align-items:center; gap:10px; min-width:0; }
   .crumb .title { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .crumb .num { color:var(--faint); font-variant-numeric:tabular-nums; }
-  .seq-chip { padding:2px 9px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .seq-chip { display:inline-flex; align-items:center; gap:4px; height:24px; padding:0 6px 0 10px; border:1px solid var(--border); border-radius:99px; background:var(--surface-2); color:var(--muted); font:inherit; font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; cursor:pointer; transition:color .12s, border-color .12s; }
+  .seq-chip:hover { color:var(--text); border-color:var(--border-strong); }
+  .seq-chip svg.i { width:12px; height:12px; transform:rotate(90deg); }
+  .prow.cur { background:var(--accent-soft); }
   .sep { width:1px; height:22px; background:var(--border); }
 
   .btn { display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:8px; border:1px solid var(--border); background:var(--surface); font-size:14px; font-weight:500; white-space:nowrap; transition:background .12s, border-color .12s; }
@@ -231,7 +234,7 @@
   .tnode .wb { position:absolute; top:-10px; right:-8px; min-width:20px; height:20px; padding:0 6px; display:grid; place-items:center; border-radius:99px; background:var(--accent); color:var(--on-accent); font-size:11px; font-weight:600; }
   .topic-dialog { width:min(860px, 100%); }
   .topic-meta { padding:12px 16px; border-bottom:1px solid var(--border); color:var(--muted); font-size:13px; }
-  #topicBody .plist { max-height:min(540px, 62vh); overflow:auto; border:0; border-radius:0; box-shadow:none; }
+  #topicBody .plist, #seqBody .plist { max-height:min(540px, 62vh); overflow:auto; border:0; border-radius:0; box-shadow:none; }
 
   /* roadmap: one collapsible card per week (overrides the statement page's details/summary styles) */
   .roadmap { display:flex; flex-direction:column; gap:10px; }
@@ -502,7 +505,7 @@
     <button class="btn ghost icon" id="next" title="Next problem" aria-label="Next problem"><svg class="i"><use href="#i-right"/></svg></button>
     <span class="num" id="crumbNum"></span><span class="title" id="crumbTitle"></span>
     <span id="crumbStatus"></span>
-    <span class="seq-chip hide-sm" id="crumbSeq" hidden></span>
+    <button class="seq-chip hide-sm" id="crumbSeq" title="Show this list" aria-haspopup="dialog" hidden><span id="crumbSeqTxt"></span><svg class="i"><use href="#i-right"/></svg></button>
   </div>
   <div class="spacer"></div>
   <button class="btn search-btn" id="openPal" title="Search problems (Ctrl+K)"><svg class="i"><use href="#i-search"/></svg><span class="hide-sm">Search</span><kbd class="hide-sm">Ctrl K</kbd></button>
@@ -617,6 +620,13 @@
   </div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div class="overlay" id="seqView" hidden>
+  <div class="palette topic-dialog" role="dialog" aria-modal="true" aria-labelledby="seqTitle">
+    <div class="pal-input"><b id="seqTitle"></b><span class="spacer"></span><kbd>Esc</kbd></div>
+    <div id="seqBody"></div>
+  </div>
+</div>
+
 <div class="overlay" id="topicView" hidden>
   <div class="palette topic-dialog" role="dialog" aria-modal="true" aria-labelledby="topicTitle">
     <div class="pal-input"><b id="topicTitle"></b><span class="spacer"></span><kbd>Esc</kbd></div>
@@ -1129,12 +1139,23 @@ function celebrate(from) {
 try { state.seq = JSON.parse(store.get("seq")); } catch { state.seq = null; }
 document.addEventListener("click", e => {
   const list = e.target.closest(".prow")?.closest(".plist");
-  if (!list) return;
+  if (!list || list.closest("#seqView")) return;  // picking from the list itself keeps the same list
   state.seq = { label: list.dataset.seq || "Problems", back: location.hash || "#/",
                 ids: [...list.querySelectorAll(".prow")].map(a => a.getAttribute("href").slice("#/p/".length)) };
   store.set("seq", JSON.stringify(state.seq));
 }, true);
 const curSeq = () => (state.seq?.ids?.includes(state.cur?.id) ? state.seq : null);
+$("#crumbSeq").onclick = () => {
+  const seq = curSeq();
+  if (!seq) return;
+  const byId = Object.fromEntries(state.list.map(p => [p.id, p])), items = seq.ids.map(id => byId[id]).filter(Boolean);
+  $("#seqTitle").textContent = seq.label;
+  $("#seqBody").innerHTML = `<div class="topic-meta">${solvedOf(items)} of ${items.length} solved</div>
+    <div class="plist">${items.map((p, k) => prowHtml(p, k, k + 1 + ".").replace('class="prow', `class="prow${p.id === state.cur.id ? " cur" : ""}`)).join("")}</div>`;
+  $("#seqView").hidden = false;
+  $("#seqBody .prow.cur")?.scrollIntoView({ block: "center" });
+};
+$("#seqView").onclick = e => { if (e.target.id === "seqView" || e.target.closest(".prow")) $("#seqView").hidden = true; };
 const seqIds = () => curSeq()?.ids || state.list.map(p => p.id);
 
 function updateCrumb() {
@@ -1145,7 +1166,7 @@ function updateCrumb() {
   $("#prev").disabled = k <= 0;
   $("#next").disabled = k >= ids.length - 1;
   $("#crumbSeq").hidden = !seq;
-  if (seq) $("#crumbSeq").textContent = `${seq.label} · ${k + 1} / ${ids.length}`;
+  if (seq) $("#crumbSeqTxt").textContent = `${seq.label} · ${k + 1} / ${ids.length}`;
   const road = seq?.back === "#/roadmap";
   $("#crumbBack").href = road ? "#/roadmap" : "#/";
   $("#crumbBackLbl").textContent = road ? "Roadmap" : "Problems";
@@ -1256,7 +1277,7 @@ async function openNotes() {
 }
 $("#sideNotes").onclick = openNotes;
 $("#notesView").onclick = e => { if (e.target.id === "notesView" || e.target.closest(".note-item")) $("#notesView").hidden = true; };
-document.addEventListener("keydown", e => { if (e.key === "Escape") $("#notesView").hidden = $("#topicView").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#notesView").hidden = $("#topicView").hidden = $("#seqView").hidden = true; });
 
 // ---------- resizable panes ----------
 function resizer(gutter, target, prop, axis, min, max) {
