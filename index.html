@@ -171,6 +171,30 @@
   .resume svg { color:var(--faint); transition:transform .15s; } .resume:hover svg { transform:translateX(3px); }
 
   .section-label { margin:30px 0 12px; font-size:13px; font-weight:500; color:var(--faint); }
+
+  /* review queue, notes, custom input */
+  button.resume { font:inherit; cursor:pointer; margin-left:8px; }
+  .resume .lbl.review { background:var(--amber-soft); color:var(--amber); }
+  .due-tag { margin-left:8px; padding:1px 7px; border-radius:99px; background:var(--amber-soft); color:var(--amber); font-size:11px; font-weight:600; vertical-align:2px; }
+  .review-banner { display:flex; align-items:center; gap:10px; margin:0 0 16px; padding:10px 12px; border-radius:10px; background:var(--amber-soft); color:var(--text); font-size:14px; }
+  .review-banner svg.i { color:var(--amber); flex:none; } .review-banner span { flex:1; } .review-banner .btn { height:30px; font-size:13px; }
+  .review-note { display:flex; align-items:center; gap:8px; margin:-4px 0 12px; color:var(--amber); font-size:13px; }
+  .notes-box { margin-top:22px; }
+  .notes-box label { display:block; margin-bottom:6px; font-size:14px; font-weight:600; }
+  .note-state { margin-left:6px; font-weight:400; font-size:12px; color:var(--faint); }
+  .notes-box textarea, .custom-box textarea { width:100%; resize:vertical; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); font:13px/1.55 var(--mono); }
+  .notes-box textarea { font-family:var(--font); font-size:14px; }
+  .notes-box textarea:focus, .custom-box textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .custom-box { padding:12px 14px; border-bottom:1px solid var(--border); background:var(--surface-2); }
+  .custom-box label { display:block; margin-bottom:6px; font-size:12px; color:var(--muted); }
+  .custom-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .custom-actions .btn { height:30px; font-size:13px; }
+  #customToggle[aria-expanded="true"] { color:var(--accent); background:var(--accent-soft); }
+  .notes-dialog #notesList { max-height:min(560px, 70vh); overflow:auto; padding:6px; }
+  .note-item { display:block; padding:10px 12px; border-radius:9px; color:var(--text); }
+  .note-item:hover { background:var(--surface-2); text-decoration:none; }
+  .note-item .grp { margin-left:8px; color:var(--faint); font-size:12px; }
+  .note-item p { margin:4px 0 0; color:var(--muted); font-size:14px; white-space:pre-wrap; }
   .rm-count { margin-left:8px; color:var(--muted); }
 
   /* roadmap: one collapsible card per week (overrides the statement page's details/summary styles) */
@@ -472,6 +496,7 @@
       <button data-status="unsolved"><svg class="i"><use href="#i-circle"/></svg>Unsolved<span class="cnt"></span></button>
       <button data-status="starred"><svg class="i"><use href="#i-star"/></svg>Starred<span class="cnt"></span></button>
       <button data-status="solved"><svg class="i"><use href="#i-done"/></svg>Solved<span class="cnt"></span></button>
+      <button data-status="review"><svg class="i"><use href="#i-clock"/></svg>Review due<span class="cnt"></span></button>
     </nav>
     <div class="side-prog">
       <div class="ringrow">
@@ -481,6 +506,7 @@
       <div id="diffRows"></div>
     </div>
     <div class="side-foot">
+      <button id="sideNotes" title="Read all your notes"><svg class="i"><use href="#i-grid"/></svg><span>My notes</span></button>
       <button id="sidePal" title="Search (Ctrl+K)"><svg class="i"><use href="#i-search"/></svg><span>Search</span><kbd>Ctrl K</kbd></button>
       <button id="sideTheme" title="Toggle light / dark" aria-label="Toggle light or dark theme"><svg class="i theme-light"><use href="#i-moon"/></svg><svg class="i theme-dark"><use href="#i-sun"/></svg><span>Theme</span></button>
       <a href="https://usaco.guide" target="_blank" rel="noopener" title="Open usaco.guide"><svg class="i"><use href="#i-ext"/></svg><span>usaco.guide</span></a>
@@ -497,6 +523,7 @@
       <h1 class="page-title">Problems</h1>
       <p class="page-sub">An unofficial practice judge for <a href="https://usaco.guide" target="_blank" rel="noopener">usaco.guide</a>: submit and test your solutions, LeetCode-style. Topics name the area, not the trick.</p>
       <a class="resume" id="resume" href="#/" hidden><span class="lbl" id="resumeLbl">Continue</span><span id="resumeTitle"></span><svg class="i"><use href="#i-arrow"/></svg></a>
+      <button class="resume" id="reviewChip" hidden><span class="lbl review">Review</span><span id="reviewText"></span><svg class="i"><use href="#i-arrow"/></svg></button>
       <div class="section-label">Roadmap · 4 weeks of core patterns <span class="rm-count" id="roadmapCount"></span></div>
       <div class="roadmap" id="roadmap"></div>
       <div class="section-label">Topics</div>
@@ -520,8 +547,15 @@
     <div class="gutter h" id="gRows" role="separator" aria-orientation="horizontal" aria-label="Resize editor and results" tabindex="0"></div>
     <div class="panel" id="bottom">
       <div class="panel-head"><b>Results</b><span class="spacer"></span>
+        <button class="btn ghost" id="customToggle" aria-expanded="false" title="Run on your own input">Test</button>
         <button class="btn" id="run" title="Run examples (Ctrl+Enter)"><svg class="i"><use href="#i-play"/></svg>Run</button>
         <button class="btn primary" id="submit" title="Submit all tests (Ctrl+')">Submit</button>
+      </div>
+      <div class="custom-box" id="customBox" hidden>
+        <label for="customIn" id="customLabel">Your input: one JSON value per line</label>
+        <textarea id="customIn" spellcheck="false" rows="4"></textarea>
+        <div class="custom-actions"><button class="btn ghost" id="customSample">Use example</button>
+          <button class="btn" id="customRun"><svg class="i"><use href="#i-play"/></svg>Run on this input</button></div>
       </div>
       <div id="result"></div>
     </div>
@@ -537,6 +571,12 @@
   </div>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div class="overlay" id="notesView" hidden>
+  <div class="palette notes-dialog" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+    <div class="pal-input"><b id="notesTitle">My notes</b><span class="spacer"></span><kbd>Esc</kbd></div>
+    <div id="notesList"></div>
+  </div>
+</div>
 
 <script>
 const $ = s => document.querySelector(s);
@@ -600,7 +640,10 @@ function renderSide() {
   countTo($("#solvedCount"), solved);
   countTo($("#ringPct"), pct, "%");
   $("#totalCount").textContent = L.length;
-  const counts = { all: L.length, starred: L.filter(p => p.starred).length, unsolved: L.length - solved, solved };
+  const due = L.filter(isDue).length;
+  const counts = { all: L.length, starred: L.filter(p => p.starred).length, unsolved: L.length - solved, solved, review: due };
+  $("#reviewChip").hidden = !due;
+  $("#reviewText").textContent = `${due} problem${due === 1 ? "" : "s"} due for review today`;
   document.querySelectorAll("#sideNav button").forEach(b => {
     b.querySelector(".cnt").textContent = counts[b.dataset.status];
     b.setAttribute("aria-pressed", b.dataset.status === ui.status);
@@ -633,10 +676,15 @@ function renderFilters() {
       `<button data-diff="${d}" aria-pressed="${ui.diff === d}"><span class="dot" style="--c:var(--${color[d]})"></span>${d}</button>`).join("");
 }
 
+const today = () => new Date().toLocaleDateString("en-CA");  // local YYYY-MM-DD, same format the server stores
+const isDue = p => !!p.due && p.due <= today();
+
 function matches(p) {
   const q = ui.q.trim().toLowerCase();
+  const status = { all: () => true, starred: () => !!p.starred, review: () => isDue(p),
+                   solved: () => p.status === "solved", unsolved: () => p.status !== "solved" }[ui.status] || (() => true);
   return (ui.topic === "all" || p.group === ui.topic)
-    && (ui.status === "all" || (ui.status === "starred" ? !!p.starred : (ui.status === "solved") === (p.status === "solved")))
+    && status()
     && (ui.diff === "any" || p.difficulty === ui.diff)
     && (!q || `#${p.n} ${p.title} ${p.group} ${p.difficulty} ${p.division}`.toLowerCase().includes(q));
 }
@@ -768,7 +816,7 @@ function prowHtml(p, k, label) {  // one problem row, shared by the problem list
   return `
     <a class="prow g${p.gi}" href="#/p/${p.id}" style="--i:${k}">
       <span class="rs ${p.status}" title="${{ solved: "Solved", attempted: "Attempted" }[p.status] || "Not attempted"}">${icon({ solved: "check", attempted: "dot" }[p.status] || "circle")}</span>
-      <span class="rn">${label}</span><span class="rt">${esc(p.title)}${p.starred ? `<span class="star" title="Starred on usaco.guide: ${esc(p.starred)}">${icon("star")}</span>` : ""}</span>
+      <span class="rn">${label}</span><span class="rt">${esc(p.title)}${p.starred ? `<span class="star" title="Starred on usaco.guide: ${esc(p.starred)}">${icon("star")}</span>` : ""}${isDue(p) ? `<span class="due-tag">Review</span>` : ""}</span>
       <span class="rg"><span class="dotc"></span>${esc(p.group)}</span>
       <span class="rd">USACO ${esc(p.division)}</span>
       <span class="pill ${p.difficulty}">${p.difficulty}</span>${icon("arrow", "ra")}
@@ -923,19 +971,36 @@ async function openProblem(id) {
   if (state.cur?.id !== p.id) stopTimer();
   state.cur = p;
   store.set("last", p.id);
+  const reviewDue = p.due && p.due <= today();
   $("#desc").innerHTML = `
     <h1>${esc(p.title)}${(s => s ? ` <span class="star" title="Starred on usaco.guide: ${esc(s)}">${icon("star")}</span>` : "")(state.list.find(x => x.id === p.id)?.starred)}</h1>
-    <div class="sub"><span class="pill ${p.difficulty}">${p.difficulty}</span></div>
+    <div class="sub"><span class="pill ${p.difficulty}">${p.difficulty}</span>${p.due && !reviewDue ? `<span class="tag">Next review ${esc(p.due)}</span>` : ""}</div>
+    ${reviewDue ? `<div class="review-banner">${icon("clock")}<span><b>Review due.</b> Solve it again from scratch, without looking at your old code.</span>
+      <button class="btn" id="reviewFresh">Clear editor</button></div>` : ""}
     ${p.statement}
     ${p.examples.map((e, i) => `<h3>Example ${i + 1}</h3>
       <div class="example"><pre>${esc(e.input)}</pre><pre class="out"><span class="k">Output:</span> ${esc(e.expected)}</pre></div>`).join("")}
     <details><summary>Hint: pattern</summary><div class="body">${esc(p.hint.pattern)}</div></details>
     <details><summary>Study material</summary><div class="body">
       <a href="${p.hint.url}" target="_blank" rel="noopener">usaco.guide: ${esc(p.hint.module)}</a><br>Similar to ${esc(p.hint.similar)}</div></details>
-    <details id="sol"><summary>Reference solution (spoiler)</summary><div class="body"><pre>Loading…</pre></div></details>`;
+    <details id="sol"><summary>Reference solution (spoiler)</summary><div class="body"><pre>Loading…</pre></div></details>
+    <div class="notes-box"><label for="noteIn">My notes <span class="note-state" id="noteState"></span></label>
+      <textarea id="noteIn" rows="4" placeholder="The trick was… / mistakes I made… (saved automatically)">${esc(p.note)}</textarea></div>`;
   $("#sol").addEventListener("toggle", async e => {
     if (e.target.open) e.target.querySelector("pre").textContent = (await api("/api/solution/" + p.id)).code;
   }, { once: true });
+  let noteTimer;
+  $("#noteIn").addEventListener("input", e => {  // autosave after a short pause in typing
+    clearTimeout(noteTimer);
+    $("#noteState").textContent = "…";
+    noteTimer = setTimeout(async () => {
+      await api("/api/notes", { id: p.id, note: e.target.value });
+      $("#noteState").textContent = "Saved";
+    }, 600);
+  });
+  if (reviewDue) $("#reviewFresh").onclick = () => { editor.setValue(p.starter); store.set("draft:" + p.id, null); editor.focus?.(); };
+  $("#customLabel").textContent = `Your input: one JSON value per line, in order (${p.params.join(", ")})`;
+  if (state.customFor !== p.id) { $("#customIn").value = p.sample; state.customFor = p.id; }
   $("#desc").scrollTop = 0;
   editor.setValue(store.get("draft:" + id) ?? p.code);
   $("#result").innerHTML = EMPTY;
@@ -946,13 +1011,14 @@ async function openProblem(id) {
 
 function renderResult(r, kind) {
   const good = r.verdict === "Accepted" && (kind === "submit" || r.passed === r.total);
-  const title = good && kind === "run" ? "Examples passed" : r.verdict;
+  const title = good && kind === "run" ? "Examples passed" : good && kind === "custom" ? "Matches the expected output" : r.verdict;
   let h = `<div class="verdict ${good ? "good" : "bad"}"><span class="v">${esc(title)}</span>
-    <span class="m">${r.passed} / ${r.total} tests passed${r.ms ? ` · slowest ${r.ms} ms` : ""}</span></div>`;
+    <span class="m">${kind === "custom" ? (r.ms ? `${r.ms} ms` : "") : `${r.passed} / ${r.total} tests passed`}${r.ms && kind !== "custom" ? ` · slowest ${r.ms} ms` : ""}</span></div>`;
+  if (r.review) h += `<div class="review-note">${icon("clock")}${esc(r.review)}</div>`;
   if (r.error) h += `<pre class="err">${esc(r.error)}</pre>`;
   r.cases.forEach((c, i) => {
     const ok = c.ok === true;
-    const head = kind === "run" ? `${icon(ok ? "check" : "x")}Case ${i + 1}` : `${icon("x")}Failing test`;
+    const head = kind === "custom" ? `${icon(ok ? "check" : "x")}Your input` : kind === "run" ? `${icon(ok ? "check" : "x")}Case ${i + 1}` : `${icon("x")}Failing test`;
     const showGot = c.got !== "null" || c.ok === false;
     h += `<div class="case"><div class="case-head ${ok ? "ok" : "no"}">${head}</div>
       <div class="row"><span>Input</span><pre>${esc(c.input)}</pre></div>
@@ -965,10 +1031,10 @@ function renderResult(r, kind) {
 
 async function go(kind) {
   if (!state.cur || $("#run").disabled) return;
-  $("#run").disabled = $("#submit").disabled = true;
-  $("#result").innerHTML = `<div class="empty"><span class="spinner"></span>${kind === "run" ? "Running examples" : "Judging all tests"}…</div>`;
+  $("#run").disabled = $("#submit").disabled = $("#customRun").disabled = true;
+  $("#result").innerHTML = `<div class="empty"><span class="spinner"></span>${{ run: "Running examples", submit: "Judging all tests", custom: "Running your input" }[kind]}…</div>`;
   try {
-    const r = await api("/api/" + kind, { id: state.cur.id, code: editor.getValue() });
+    const r = await api("/api/" + kind, { id: state.cur.id, code: editor.getValue(), input: $("#customIn").value });
     renderResult(r, kind);
     if (kind === "submit") {
       await loadList();
@@ -980,9 +1046,31 @@ async function go(kind) {
   } catch (e) {
     $("#result").innerHTML = `<pre class="err">Could not reach the judge. Is server.py still running?\n${esc(e)}</pre>`;
   } finally {
-    $("#run").disabled = $("#submit").disabled = false;
+    $("#run").disabled = $("#submit").disabled = $("#customRun").disabled = false;
   }
 }
+
+// ---------- custom input, notes overview, review chip ----------
+$("#customToggle").onclick = () => {
+  const box = $("#customBox");
+  box.hidden = !box.hidden;
+  $("#customToggle").setAttribute("aria-expanded", !box.hidden);
+  if (!box.hidden) $("#customIn").focus();
+};
+$("#customSample").onclick = () => { if (state.cur) $("#customIn").value = state.cur.sample; };
+$("#customRun").onclick = () => go("custom");
+$("#reviewChip").onclick = () => setFilter("status", "review");
+
+async function openNotes() {
+  const notes = await api("/api/notes");
+  $("#notesList").innerHTML = notes.length ? notes.map(n => `
+    <a class="note-item" href="#/p/${n.id}"><b>${esc(n.title)}</b><span class="grp">${esc(n.group)}</span><p>${esc(n.note)}</p></a>`).join("")
+    : `<div class="pal-empty">No notes yet. Write them under any problem; they show up here.</div>`;
+  $("#notesView").hidden = false;
+}
+$("#sideNotes").onclick = openNotes;
+$("#notesView").onclick = e => { if (e.target.id === "notesView" || e.target.closest(".note-item")) $("#notesView").hidden = true; };
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#notesView").hidden = true; });
 
 // ---------- resizable panes ----------
 function resizer(gutter, target, prop, axis, min, max) {

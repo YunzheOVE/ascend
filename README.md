@@ -32,7 +32,10 @@
 - **Run** your `class Solution` on the examples, or **Submit** it against ~30 hidden tests, including large inputs (n ≈ 10⁵) where an O(n²) solution won't finish in the 2 s limit.
 - **A four-week roadmap** of core patterns, plus search, difficulty filters, and a random unsolved pick.
 - **Hints and references:** each problem has a hidden pattern hint, a link to its usaco.guide module, and a spoiler solution.
-- **Progress travels with the repo:** solutions save to `solutions/<id>.py` and solved status to `progress.json`.
+- **Test** runs your code on your own input (one JSON value per line) and compares it with the reference answer.
+- **Review queue:** a first solve schedules a re-solve in 3 days, then 7, 21 and 60; a miss brings it back tomorrow.
+- **Notes** under each problem save automatically; **My notes** in the sidebar shows them all.
+- **Progress travels with the repo:** code in `solutions/<id>.py`, solved status in `progress.json`, the review schedule in `reviews.json`, and notes in `notes.json`.
 
 ## How it works
 
@@ -43,6 +46,10 @@
 ## Run it
 
 Requires Python 3. No packages to install.
+
+**Double-click `launch.pyw`** (or a desktop shortcut to it). It starts the judge in the background if it isn't already running and opens http://localhost:8000. The judge keeps running until you sign out; after a `git pull` that changes `server.py` or `problems.py`, end `pythonw.exe` in Task Manager and launch again.
+
+Or from a terminal:
 
 ```bash
 python server.py     # then open http://localhost:8000
