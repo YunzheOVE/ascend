@@ -206,12 +206,12 @@
   .tree-legend span::before { content:""; display:inline-block; width:10px; height:10px; margin-right:6px; border-radius:3px; border:1.5px solid var(--k, var(--border-strong)); vertical-align:-1px; }
   .k-dp { --k:#8b5cf6; } .k-gr { --k:#0d9488; } .k-mt { --k:#ea580c; }
   .tree-wrap { overflow-x:auto; margin:10px -8px 0; padding:14px 8px 8px; }
-  .tree { position:relative; width:1000px; margin:0 auto; }
+  .tree { position:relative; margin:0 auto; }
   .tree-edges { position:absolute; inset:0; pointer-events:none; }
   .tree-edges path { fill:none; stroke:var(--border-strong); stroke-width:1.5; transition:opacity .25s; }
   .tree-edges path.dim { opacity:.25; }
   .tnode { --ink:var(--k, var(--muted)); --band:color-mix(in srgb, var(--ink) 11%, var(--surface));
-    position:absolute; width:144px; height:116px; display:flex; flex-direction:column; padding:0; border:1px solid var(--k, var(--border-strong)); border-radius:12px;
+    position:absolute; width:132px; height:116px; display:flex; flex-direction:column; padding:0; border:1px solid var(--k, var(--border-strong)); border-radius:12px;
     background:var(--surface); color:var(--text); text-align:left; box-shadow:var(--shadow); transition:transform .15s, opacity .25s, box-shadow .15s; }
   .tnode .art { height:46px; flex:none; display:grid; place-items:center; border-radius:11px 11px 0 0; background:var(--band); color:var(--ink); }
   .tnode .art svg { width:120px; height:38px; fill:var(--band); stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
@@ -970,18 +970,21 @@ const TREE_ART = {
 
 function renderTree() {
   if (!state.tree) return;
-  const NW = 144, NH = 116, RH = 150, W = 1000, pos = {}, rows = [];
-  state.tree.forEach(n => (rows[n.row] ||= []).push(n));
-  rows.forEach(r => { const gap = (W - r.length * NW) / (r.length + 1); r.forEach((n, i) => (pos[n.id] = { x: gap + i * (NW + gap), y: n.row * RH + 4 })); });
-  const H = rows.length * RH, week = state.roadmap[ui.week], inWeek = {};
+  // Grid of lanes: each topic has a row and a column, so arrows run straight down a lane or along the gap between rows.
+  const NW = 132, NH = 116, CW = 150, RH = 150, R = 8, pos = {};
+  state.tree.forEach(n => (pos[n.id] = { x: n.col * CW + (CW - NW) / 2, y: n.row * RH + 4 }));
+  const W = (Math.max(...state.tree.map(n => n.col)) + 1) * CW, H = (Math.max(...state.tree.map(n => n.row)) + 1) * RH;
+  const week = state.roadmap[ui.week], inWeek = {};
   if (week) {
     const nodeOf = Object.fromEntries(state.tree.flatMap(n => n.modules.map(m => [m, n.id])));
     week.ids.forEach(id => { const p = state.list.find(x => x.id === id); if (p) inWeek[nodeOf[p.module]] = (inWeek[nodeOf[p.module]] || 0) + 1; });
   }
   const edges = state.tree.flatMap(n => n.after.map(a => {
-    const s = pos[a], t = pos[n.id], x1 = s.x + NW / 2, y1 = s.y + NH, x2 = t.x + NW / 2, y2 = t.y, m = (y1 + y2) / 2;
-    return `<path${week && !(inWeek[a] && inWeek[n.id]) ? ` class="dim"` : ""} d="M${x1} ${y1}C${x1} ${m} ${x2} ${m} ${x2} ${y2}"/>`;
+    const s = pos[a], t = pos[n.id], x1 = s.x + NW / 2, y1 = s.y + NH, x2 = t.x + NW / 2, y2 = t.y, m = (y1 + y2) / 2, d = Math.sign(x2 - x1);
+    const path = d ? `M${x1} ${y1}V${m - R}Q${x1} ${m} ${x1 + d * R} ${m}H${x2 - d * R}Q${x2} ${m} ${x2} ${m + R}V${y2}` : `M${x1} ${y1}V${y2}`;
+    return `<path${week && !(inWeek[a] && inWeek[n.id]) ? ` class="dim"` : ""} d="${path}"/>`;
   }));
+  $("#tree").style.width = W + "px";
   $("#tree").style.height = H + "px";
   $("#tree").innerHTML = `<svg class="tree-edges" width="${W}" height="${H}" aria-hidden="true">${edges.join("")}</svg>` + state.tree.map(n => {
     const items = topicItems(n), s = solvedOf(items), c = inWeek[n.id];
