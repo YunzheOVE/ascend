@@ -26,10 +26,6 @@
     --shadow-lift:0 6px 18px -6px rgba(20,20,15,.12);
     --radius:10px; --font:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
-    /* one hue per topic group: --gN is the ink, --gNs the soft wash */
-    --g0:#2563eb; --g0s:#eaf0fe; --g1:#d97706; --g1s:#fdf3e3; --g2:#7c3aed; --g2s:#f1ebfe;
-    --g3:#0d9488; --g3s:#e2f5f2; --g4:#db2777; --g4s:#fde9f2; --g5:#65a30d; --g5s:#eef6e1; --g6:#e2541b; --g6s:#fdece4;
-    --g7:#0284c7; --g7s:#e0f2fe; --g8:#475569; --g8s:#eef1f5; --g9:#059669; --g9s:#e3f6ef; --g10:#be123c; --g10s:#fde8ec;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
@@ -39,9 +35,6 @@
     --green:#4ade80; --green-soft:#16291d; --amber:#f5b54a; --amber-soft:#2e2413; --red:#f87171; --red-soft:#33191a;
     --syn-kw:#c792ea; --syn-def:#82aaff; --syn-str:#b5e08c; --syn-num:#f78c6c; --syn-com:#6e6e76; --syn-builtin:#89ddff;
     --shadow:none; --shadow-lift:0 6px 18px -6px rgba(0,0,0,.5); color-scheme: dark;
-    --g0:#7aa2ff; --g0s:#172036; --g1:#f5b54a; --g1s:#2a2112; --g2:#b49cff; --g2s:#211a38;
-    --g3:#4fd1c0; --g3s:#112825; --g4:#f472b6; --g4s:#311726; --g5:#a3e635; --g5s:#1c2610; --g6:#fb8a5c; --g6s:#311b12;
-    --g7:#38bdf8; --g7s:#0c2433; --g8:#a5b4c8; --g8s:#1d222b; --g9:#34d399; --g9s:#0f2a20; --g10:#fb7185; --g10s:#331720;
   } }
   :root[data-theme="dark"] {
     --bg:#111113; --surface:#18181b; --surface-2:#202024; --border:#2a2a2f; --border-strong:#3a3a40;
@@ -50,9 +43,6 @@
     --green:#4ade80; --green-soft:#16291d; --amber:#f5b54a; --amber-soft:#2e2413; --red:#f87171; --red-soft:#33191a;
     --syn-kw:#c792ea; --syn-def:#82aaff; --syn-str:#b5e08c; --syn-num:#f78c6c; --syn-com:#6e6e76; --syn-builtin:#89ddff;
     --shadow:none; --shadow-lift:0 6px 18px -6px rgba(0,0,0,.5); color-scheme: dark;
-    --g0:#7aa2ff; --g0s:#172036; --g1:#f5b54a; --g1s:#2a2112; --g2:#b49cff; --g2s:#211a38;
-    --g3:#4fd1c0; --g3s:#112825; --g4:#f472b6; --g4s:#311726; --g5:#a3e635; --g5s:#1c2610; --g6:#fb8a5c; --g6s:#311b12;
-    --g7:#38bdf8; --g7s:#0c2433; --g8:#a5b4c8; --g8s:#1d222b; --g9:#34d399; --g9s:#0f2a20; --g10:#fb7185; --g10s:#331720;
   }
 
   * { box-sizing:border-box; }
@@ -114,11 +104,6 @@
   .menu button span { color:var(--faint); }
 
   /* ---------- home: sidebar + search + gallery (layout after Refero) ---------- */
-  .g0 { --gc:var(--g0); --gs:var(--g0s); } .g1 { --gc:var(--g1); --gs:var(--g1s); } .g2 { --gc:var(--g2); --gs:var(--g2s); }
-  .g3 { --gc:var(--g3); --gs:var(--g3s); } .g4 { --gc:var(--g4); --gs:var(--g4s); }
-  .g5 { --gc:var(--g5); --gs:var(--g5s); } .g6 { --gc:var(--g6); --gs:var(--g6s); }
-  .g7 { --gc:var(--g7); --gs:var(--g7s); } .g8 { --gc:var(--g8); --gs:var(--g8s); }
-  .g9 { --gc:var(--g9); --gs:var(--g9s); } .g10 { --gc:var(--g10); --gs:var(--g10s); }
   body[data-view="home"] .topbar { display:none; }
   #home { flex:1; min-height:0; display:flex; }
 
@@ -265,7 +250,7 @@
   .prow .rt { font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .star { color:#e0a800; margin-left:7px; vertical-align:-2px; } .star svg.i { width:14px; height:14px; fill:currentColor; }
   .prow .rg { display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:13px; white-space:nowrap; }
-  .prow .rg .dotc { width:8px; height:8px; border-radius:50%; background:var(--gc); }
+  .prow .rg .dotc { width:8px; height:8px; border-radius:50%; background:var(--k, var(--faint)); }
   .prow .rd { color:var(--faint); font-size:12px; white-space:nowrap; }
   .prow .pill { justify-self:start; }
   .prow .ra { color:var(--faint); opacity:0; transform:translateX(-4px); transition:opacity .15s, transform .15s; }
@@ -364,7 +349,7 @@
   .pal-sec { padding:8px 10px 4px; font-size:12px; color:var(--faint); }
   .pal-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 10px; border:0; border-radius:9px; background:none; color:var(--text); font-size:14px; text-align:left; }
   .pal-item[aria-selected="true"] { background:var(--surface-2); }
-  .pal-item .dotc { width:8px; height:8px; flex:none; border-radius:50%; background:var(--gc, var(--faint)); }
+  .pal-item .dotc { width:8px; height:8px; flex:none; border-radius:50%; background:var(--k, var(--faint)); }
   .pal-item .grp { margin-left:auto; color:var(--faint); font-size:13px; white-space:nowrap; }
   .pal-item .status { box-shadow:none; padding:0; background:none; }
   .pal-foot { display:flex; gap:14px; padding:8px 16px; border-top:1px solid var(--border); font-size:12px; color:var(--faint); }
@@ -617,8 +602,8 @@ const solvedOf = list => list.filter(p => p.status === "solved").length;
 
 async function loadList() {
   [state.list, state.roadmap, state.tree] = await Promise.all([api("/api/problems"), state.roadmap || api("/api/roadmap"), state.tree || api("/api/tree")]);
-  state.groups = [...new Set(state.list.map(p => p.group))];
-  state.list.forEach((p, i) => { p.n = i + 1; p.gi = styleOf(p.group); });
+  const nodeOf = Object.fromEntries(state.tree.flatMap(n => n.modules.map(m => [m, n])));
+  state.list.forEach((p, i) => { p.n = i + 1; p.topic = nodeOf[p.module].title; p.kind = kindOf(nodeOf[p.module]); });
   renderHome();
   renderRoadmap();
   renderTree();
@@ -688,14 +673,9 @@ function matches(p) {
                    solved: () => p.status === "solved", unsolved: () => p.status !== "solved" }[ui.status] || (() => true);
   return status()
     && (ui.diff === "any" || p.difficulty === ui.diff)
-    && (!q || `#${p.n} ${p.title} ${p.group} ${p.difficulty} ${p.division}`.toLowerCase().includes(q));
+    && (!q || `#${p.n} ${p.title} ${p.topic} ${p.group} ${p.difficulty} ${p.division}`.toLowerCase().includes(q));
 }
 
-// Each group keeps its own color (.gN, the dot on problem rows) even if groups are reordered.
-const STYLE = { "Arrays & Prefix Sums": 0, "Sorting, Searching & Greedy": 1, "Graphs": 2, "Stacks & Range Queries": 3,
-                "Trees": 4, "Two Pointers & Sliding Window": 5, "Dynamic Programming": 6, "Shortest Paths": 7, "Math": 8,
-                "Fundamentals": 9, "Stretch": 10 };
-const styleOf = g => STYLE[g] ?? state.groups.indexOf(g) % 11;
 
 function renderList() {
   // Starred (usaco.guide-recommended) first; sort is stable, so topic order is kept within each part.
@@ -712,10 +692,10 @@ function renderList() {
 
 function prowHtml(p, k, label) {  // one problem row, shared by the problem list and the roadmap
   return `
-    <a class="prow g${p.gi}" href="#/p/${p.id}" style="--i:${k}">
+    <a class="prow" href="#/p/${p.id}" style="--i:${k}">
       <span class="rs ${p.status}" title="${{ solved: "Solved", attempted: "Attempted" }[p.status] || "Not attempted"}">${icon({ solved: "check", attempted: "dot" }[p.status] || "circle")}</span>
       <span class="rn">${label}</span><span class="rt">${esc(p.title)}${p.starred ? `<span class="star" title="Starred on usaco.guide: ${esc(p.starred)}">${icon("star")}</span>` : ""}${isDue(p) ? `<span class="due-tag">Review</span>` : ""}</span>
-      <span class="rg"><span class="dotc"></span>${esc(p.group)}</span>
+      <span class="rg k-${p.kind}"><span class="dotc"></span>${esc(p.topic)}</span>
       <span class="rd">USACO ${esc(p.division)}</span>
       <span class="pill ${p.difficulty}">${p.difficulty}</span>${icon("arrow", "ra")}
     </a>`;
@@ -902,12 +882,12 @@ function renderPalette() {
     { label: "Toggle light / dark theme", icon: "moon", run: toggleTheme },
     { label: "Go to all problems", icon: "grid", run: () => (location.hash = "#/") },
   ].filter(a => !q || a.label.toLowerCase().includes(q));
-  const probs = state.list.filter(p => !q || `#${p.n} ${p.title} ${p.group} ${p.difficulty}`.toLowerCase().includes(q));
+  const probs = state.list.filter(p => !q || `#${p.n} ${p.title} ${p.topic} ${p.group} ${p.difficulty}`.toLowerCase().includes(q));
   pal.items = [...probs.map(p => () => (location.hash = "#/p/" + p.id)), ...actions.map(a => a.run)];
   pal.i = 0;
   let k = 0;
   $("#palList").innerHTML = (probs.length ? `<div class="pal-sec">Problems</div>` + probs.map(p =>
-      `<button class="pal-item g${p.gi}" role="option" data-k="${k++}"><span class="dotc"></span><span>${esc(p.title)}</span>${p.status === "solved" ? statusBadge("solved") : ""}<span class="grp">${esc(p.group)} · ${p.difficulty}</span></button>`).join("") : "")
+      `<button class="pal-item k-${p.kind}" role="option" data-k="${k++}"><span class="dotc"></span><span>${esc(p.title)}</span>${p.status === "solved" ? statusBadge("solved") : ""}<span class="grp">${esc(p.group)} · ${p.difficulty}</span></button>`).join("") : "")
     + (actions.length ? `<div class="pal-sec">Actions</div>` + actions.map(a =>
       `<button class="pal-item" role="option" data-k="${k++}">${icon(a.icon)}<span>${esc(a.label)}</span></button>`).join("") : "")
     || `<div class="pal-empty">No matches</div>`;
@@ -1098,7 +1078,7 @@ $("#reviewChip").onclick = () => setFilter("status", "review");
 async function openNotes() {
   const notes = await api("/api/notes");
   $("#notesList").innerHTML = notes.length ? notes.map(n => `
-    <a class="note-item" href="#/p/${n.id}"><b>${esc(n.title)}</b><span class="grp">${esc(n.group)}</span><p>${esc(n.note)}</p></a>`).join("")
+    <a class="note-item" href="#/p/${n.id}"><b>${esc(n.title)}</b><span class="grp">${esc(state.list.find(p => p.id === n.id)?.topic || n.group)}</span><p>${esc(n.note)}</p></a>`).join("")
     : `<div class="pal-empty">No notes yet. Write them under any problem; they show up here.</div>`;
   $("#notesView").hidden = false;
 }
