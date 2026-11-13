@@ -210,8 +210,14 @@
   .tree-edges { position:absolute; inset:0; pointer-events:none; }
   .tree-edges path { fill:none; stroke:var(--border-strong); stroke-width:1.5; transition:opacity .25s; }
   .tree-edges path.dim { opacity:.25; }
-  .tnode { position:absolute; width:144px; height:72px; display:flex; flex-direction:column; justify-content:space-between; padding:9px 11px; border:1px solid var(--k, var(--border-strong)); border-radius:12px;
-    background:color-mix(in srgb, var(--k, transparent) 7%, var(--surface)); color:var(--text); text-align:left; box-shadow:var(--shadow); transition:transform .15s, opacity .25s, box-shadow .15s; }
+  .tnode { --ink:var(--k, var(--muted)); --band:color-mix(in srgb, var(--ink) 11%, var(--surface));
+    position:absolute; width:144px; height:116px; display:flex; flex-direction:column; padding:0; border:1px solid var(--k, var(--border-strong)); border-radius:12px;
+    background:var(--surface); color:var(--text); text-align:left; box-shadow:var(--shadow); transition:transform .15s, opacity .25s, box-shadow .15s; }
+  .tnode .art { height:46px; flex:none; display:grid; place-items:center; border-radius:11px 11px 0 0; background:var(--band); color:var(--ink); }
+  .tnode .art svg { width:120px; height:38px; fill:var(--band); stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .tnode .art .f { fill:currentColor; fill-opacity:.55; }
+  .tnode .art text { fill:currentColor; stroke:none; font:600 13px var(--mono); text-anchor:middle; }
+  .tnode .bd { flex:1; display:flex; flex-direction:column; justify-content:space-between; padding:8px 11px 9px; }
   .tnode:hover { transform:translateY(-2px); }
   .tnode:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   .tnode b { font-size:13px; font-weight:600; line-height:1.2; }
@@ -900,14 +906,71 @@ function renderRoadmap() {
 
 // Topic tree: rows from the server, nodes spread evenly per row, edges are curves from parent to child.
 const KIND = { graphs: "gr", trees: "gr", bfs: "gr", dsu: "gr", topo: "gr", dijkstra: "gr", bits: "mt", modular: "mt", numtheory: "mt" };
-const kindOf = n => n.title.endsWith(" DP") ? "dp" : KIND[n.id] || "";
+const kindOf = n => /\bDP\b/.test(n.title) ? "dp" : KIND[n.id] || "";
 const DIFF = { Easy: 0, Medium: 1, Hard: 2 };
 const topicItems = n => state.list.filter(p => n.modules.includes(p.module)).sort((a, b) => DIFF[a.difficulty] - DIFF[b.difficulty]);
 ui.week = -1;
 
+// One small drawing per topic (120 x 38) that shows the technique; class "f" = filled.
+const F = ' class="f"', DIM = ' opacity=".3"';
+const cells = (n, x0, y, w, h, gap, attr = () => "") =>
+  Array.from({ length: n }, (_, i) => `<rect x="${x0 + i * (w + gap)}" y="${y}" width="${w}" height="${h}" rx="2"${attr(i)}/>`).join("");
+const grid = (rows, cols, on) => Array.from({ length: rows }, (_, r) => cells(cols, 9, 3 + r * 11.5, 12, 9, 3.4, c => on(r, c) ? F : "")).join("");
+const graph = (pts, es, on = () => false, r = 3.4) =>
+  `<path d="${es.map(([a, b]) => `M${pts[a][0]} ${pts[a][1]}L${pts[b][0]} ${pts[b][1]}`).join("")}"/>` +
+  pts.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${typeof r === "function" ? r(i) : r}"${on(i) ? F : ""}/>`).join("");
+const BIN = [[60, 6], [36, 19], [84, 19], [24, 32], [48, 32], [72, 32], [96, 32]], BIN_E = [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]];
+const TREE = [[60, 6], [30, 20], [60, 20], [90, 20], [18, 33], [42, 33], [80, 33], [100, 33]], TREE_E = [[0, 1], [0, 2], [0, 3], [1, 4], [1, 5], [3, 6], [3, 7]];
+const TREE_ART = {
+  search: graph([[60, 5], [24, 19], [60, 19], [96, 19], [14, 33], [34, 33], [50, 33], [70, 33], [86, 33], [106, 33]],
+    [[0, 1], [0, 2], [0, 3], [1, 4], [1, 5], [2, 6], [2, 7], [3, 8], [3, 9]], i => [0, 2, 7].includes(i), 3) +
+    `<path d="M30 30l7 7M37 30l-7 7M102 30l7 7M109 30l-7 7" stroke-width="1.4"/>`,
+  hashing: `<path d="M24 8L22 21M60 8L76 21M96 8L94 21"/>` + graph([[24, 6], [60, 6], [96, 6]], [], () => true, 2.6) +
+    cells(5, 15, 22, 14, 12, 4, i => [0, 3, 4].includes(i) ? F : ""),
+  sorting: [18, 8, 26, 13].map((h, i) => `<rect x="${6 + i * 10}" y="${35 - h}" width="7" height="${h}" rx="1.5"/>`).join("") +
+    `<path d="M50 21h18M63 16l5 5-5 5"/>` + [8, 13, 18, 26].map((h, i) => `<rect x="${76 + i * 10}" y="${35 - h}" width="7" height="${h}" rx="1.5"${F}/>`).join(""),
+  prefix: Array.from({ length: 7 }, (_, i) => `<rect x="${8 + i * 15}" y="${35 - (i + 1) * 4.4}" width="10" height="${(i + 1) * 4.4}" rx="1.5"${i > 3 ? F : ""}/>`).join(""),
+  twoptr: cells(7, 7, 18, 12, 12, 3.5, i => i === 0 || i === 6 ? F : "") + `<path d="M13 7h22M30 4l5 3-5 3M106 7H84M89 4l-5 3 5 3"/>`,
+  binsearch: cells(9, 6, 16, 9, 12, 3.5, i => i === 4 ? F : i > 4 ? DIM : "") + `<path d="M60.5 3v8M57.5 8l3 3 3-3M6 33h46"/>`,
+  heaps: graph(BIN, BIN_E, i => i === 0, i => [5, 3.6, 3.6, 2.6, 2.6, 2.6, 2.6][i]),
+  stack: [76, 58, 40, 22].map((w, i) => `<rect x="${52 - w / 2}" y="${29 - i * 8}" width="${w}" height="6" rx="1.5"${i === 3 ? F : ""}/>`).join("") +
+    `<path d="M102 4v14M98 14l4 4 4-4"/>`,
+  rangeq: `<rect x="12" y="3" width="96" height="7" rx="2"/><rect x="12" y="14" width="47" height="7" rx="2"/><rect x="61" y="14" width="47" height="7" rx="2"${F}/>` +
+    cells(8, 12, 26, 10, 9, 2.3, i => i >= 4 ? F : ""),
+  window: cells(7, 4, 17, 12, 12, 4.5, i => i >= 2 && i <= 4 ? F : "") + `<rect x="33" y="13" width="54" height="20" rx="4" fill="none"/><path d="M40 6h38M73 3l5 3-5 3"/>`,
+  graphs: graph([[14, 10], [40, 28], [58, 8], [78, 26], [104, 10], [100, 32]], [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 5]], i => i === 2),
+  bits: cells(8, 8, 13, 11, 12, 2.6, i => "10110010"[i] === "1" ? F : "") + `<path d="M8 32h104" stroke-dasharray="2 4"/>`,
+  dp: cells(6, 8, 22, 14, 12, 4, i => i < 5 ? F : "") + `<path d="M69 20Q87 4 103 19M87 20Q96 10 104 19M99 17l5 3 1-6"/>`,
+  trees: graph(TREE, TREE_E, i => i === 0),
+  bfs: graph([[60, 19], [36, 9], [84, 9], [36, 29], [84, 29], [12, 19], [108, 19]], [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5], [3, 5], [2, 6], [4, 6]],
+    i => i === 0, i => (i === 0 ? 4.4 : 3.2)) + `<circle cx="60" cy="19" r="16" fill="none" stroke-dasharray="2 3" opacity=".6"/>`,
+  dsu: graph([[30, 8], [14, 31], [30, 31], [46, 31], [90, 8], [78, 31], [102, 31]], [[0, 1], [0, 2], [0, 3], [4, 5], [4, 6]], i => i === 0 || i === 4) +
+    `<path d="M35 8h50" stroke-dasharray="3 3"/>`,
+  topo: `<path d="M34 11Q58 -2 82 11" fill="none"/>` + graph([[10, 25], [34, 13], [58, 27], [82, 13], [108, 25]], [[0, 1], [1, 2], [2, 3], [3, 4]], i => i === 0) +
+    `<path d="M104 19l4 6-7 1"/>`,
+  modular: `<circle cx="60" cy="19" r="15"/>` +
+    Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6, c = Math.cos(a), d = Math.sin(a); return `<path d="M${60 + 12 * c} ${19 + 12 * d}L${60 + 15 * c} ${19 + 15 * d}"/>`; }).join("") +
+    `<path d="M60 19V9M60 19l8 4"/><circle cx="60" cy="19" r="2"${F}/><path d="M86 10a12 12 0 0 1 0 18M83 25l3 3 3-3" opacity=".7"/>`,
+  numtheory: `<path d="M6 33H114"/>` + [8, 26, 44, 62, 80, 98].slice(0, 5).map(x => `<path d="M${x} 32Q${x + 9} 12 ${x + 18} 32"/>`).join("") +
+    graph([[8, 33], [26, 33], [44, 33], [62, 33], [80, 33], [98, 33]], [], () => true, 2.6),
+  knapsack: grid(3, 7, (r, c) => (r === 2 && c >= 3) || (r === 1 && c === 4)),
+  grids: grid(3, 7, (r, c) => [[0, 0], [0, 1], [1, 1], [1, 2], [1, 3], [2, 3], [2, 4], [2, 5], [2, 6]].some(([a, b]) => a === r && b === c)),
+  lis: (() => { const p = [[10, 24], [24, 10], [38, 30], [52, 20], [66, 32], [80, 14], [96, 26], [110, 6]], up = [0, 3, 5, 7];
+    return `<path d="M${up.map(i => p[i].join(" ")).join("L")}" fill="none"/>` + graph(p, [], i => up.includes(i)); })(),
+  dijkstra: (() => { const p = [[10, 19], [40, 6], [40, 32], [78, 8], [78, 30], [110, 19]];
+    return graph(p, [[0, 1], [1, 3], [3, 5], [1, 2], [2, 3]]) + `<path d="M10 19L40 32L78 30L110 19" fill="none" stroke-width="3.2"/>` + graph(p, [], i => [0, 2, 4, 5].includes(i)); })(),
+  bitdp: (() => { const p = [[30, 8], [90, 8], [90, 30], [30, 30]];
+    return `<path d="M30 8L90 30M90 8L30 30" stroke-dasharray="2 3" opacity=".6"/><path d="M30 8H90L30 30H90" fill="none" stroke-width="2.6"/>` + graph(p, [[1, 2], [3, 0]], i => i !== 2, 4.2); })(),
+  rangedp: `<path d="M9 22V4H109V22M25 22V12H67V22M71 22V12H98V22" fill="none"/>` + cells(7, 9, 25, 12, 9, 3.5, i => i >= 1 && i <= 3 ? F : ""),
+  digitdp: cells(4, 22, 6, 16, 20, 4, i => (i < 2 ? F : "")) + ["2", "0", "2", "6"].map((d, i) => `<text x="${30 + i * 20}" y="21">${d}</text>`).join("") +
+    `<path d="M22 33h70M87 30l5 3-5 3"/>`,
+  treedp: graph(TREE, TREE_E, i => i >= 4 || i === 2) + `<path d="M112 34V8M108 12l4-4 4 4M8 34V8M4 12l4-4 4 4"/>`,
+  reroot: graph(TREE, TREE_E, i => i === 4) + `<circle cx="18" cy="33" r="6.5" fill="none" stroke-dasharray="2 2"/><path d="M54 5Q14 2 14 22M10 18l4 4 4-4"/>`,
+};
+
 function renderTree() {
   if (!state.tree) return;
-  const NW = 144, NH = 72, RH = 108, W = 1000, pos = {}, rows = [];
+  const NW = 144, NH = 116, RH = 150, W = 1000, pos = {}, rows = [];
   state.tree.forEach(n => (rows[n.row] ||= []).push(n));
   rows.forEach(r => { const gap = (W - r.length * NW) / (r.length + 1); r.forEach((n, i) => (pos[n.id] = { x: gap + i * (NW + gap), y: n.row * RH + 4 })); });
   const H = rows.length * RH, week = state.roadmap[ui.week], inWeek = {};
@@ -923,8 +986,8 @@ function renderTree() {
   $("#tree").innerHTML = `<svg class="tree-edges" width="${W}" height="${H}" aria-hidden="true">${edges.join("")}</svg>` + state.tree.map(n => {
     const items = topicItems(n), s = solvedOf(items), c = inWeek[n.id];
     return `<button class="tnode k-${kindOf(n)}${s === items.length ? " done" : ""}${week ? (c ? " hit" : " dim") : ""}" data-node="${n.id}" style="left:${pos[n.id].x}px;top:${pos[n.id].y}px"
-      aria-label="${esc(n.title)}: ${s} of ${items.length} solved"><b>${esc(n.title)}</b>
-      <span class="trow"><span class="mini"><i style="width:${100 * s / items.length}%"></i></span><span class="tc">${s} / ${items.length}</span></span>
+      aria-label="${esc(n.title)}: ${s} of ${items.length} solved"><span class="art"><svg viewBox="0 0 120 38" aria-hidden="true">${TREE_ART[n.id] || ""}</svg></span>
+      <span class="bd"><b>${esc(n.title)}</b><span class="trow"><span class="mini"><i style="width:${100 * s / items.length}%"></i></span><span class="tc">${s} / ${items.length}</span></span></span>
       ${c ? `<span class="wb" title="${c} of this week's problems">${c}</span>` : ""}</button>`;
   }).join("");
   $("#weekSeg").innerHTML = [-1, ...state.roadmap.keys()].map(w =>
