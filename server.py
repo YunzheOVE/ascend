@@ -206,11 +206,13 @@ class Handler(BaseHTTPRequestHandler):
             prog, reviews, notes = load_progress(), load_json(REVIEWS), load_json(NOTES)
             return self.reply(200, [{"id": p.id, "title": p.title, "difficulty": p.difficulty, "status": prog.get(p.id, ""),
                                      "group": p.group, "division": p.hint["module"].split(":")[0],
-                                     "starred": P.STARRED.get(p.id, ""), "due": reviews.get(p.id, {}).get("due", ""),
+                                     "module": P.module_of(p), "moduleName": p.hint["module"], "starred": P.STARRED.get(p.id, ""), "due": reviews.get(p.id, {}).get("due", ""),
                                      "hasNote": bool(notes.get(p.id, "").strip())}
                                     for p in P.PROBLEMS])
         if path == "/api/roadmap":
             return self.reply(200, P.ROADMAP)
+        if path == "/api/tree":
+            return self.reply(200, P.TREE)
         if path == "/api/notes":
             notes = load_json(NOTES)
             return self.reply(200, [{"id": p.id, "title": p.title, "group": p.group, "note": notes[p.id]}

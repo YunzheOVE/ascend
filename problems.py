@@ -10564,25 +10564,73 @@ STARRED = {
     "OddOneOut": "Baltic OI Genetics", "PilingPapers": "USACO Piling Papers",
 }
 # A 4-week path through the core interview patterns: one problem per pattern, easiest pattern first in each week.
+# Rare-in-interviews topics (Fenwick trees, bitmask and rerooting DP) are left to the topic tree.
 # Pair each week with the NeetCode 150 topics named in `neetcode` (do those first, then these).
 ROADMAP = [
-    dict(title="Week 1 · Arrays, windows and binary search", neetcode="Arrays & Hashing, Two Pointers, Sliding Window, Binary Search",
+    dict(title="Week 1 · Arrays, windows, binary search and backtracking", neetcode="Arrays & Hashing, Two Pointers, Sliding Window, Binary Search, Backtracking",
          ids=["RangeSums", "CountSubarrays", "DivisibleStreaks", "Attendance", "RectangleSums", "TwoGifts", "FerrisWheel",
-              "ThreeGifts", "ReadingMarathon", "GenreStretch", "WindowPeaks", "LampPosts", "ReadingPlan", "BakeryOvens", "MedianBoost"]),
-    dict(title="Week 2 · Greedy, heaps, stacks and range queries", neetcode="Stack, Heap / Priority Queue, Intervals, Greedy",
+              "ThreeGifts", "ReadingMarathon", "GenreStretch", "WindowPeaks", "LampPosts", "ReadingPlan", "BakeryOvens", "MedianBoost",
+              "AllArrangements"]),
+    dict(title="Week 2 · Greedy, heaps and stacks", neetcode="Stack, Heap / Priority Queue, Intervals, Greedy",
          ids=["FilmFestival", "AssignmentRush", "PeakOccupancy", "HotelDesk", "Deadlines", "SkylineTowers", "StreetLights",
-              "PreviousCheaper", "SumOfMinimums", "TeamStrength", "StableReadings", "LiveScoreboard", "PriceTracker", "SmallerAfter"]),
+              "PreviousCheaper", "SumOfMinimums", "TeamStrength", "StableReadings"]),
     dict(title="Week 3 · Graphs", neetcode="Graphs, Advanced Graphs",
          ids=["CountingRooms", "IceRegions", "TwoTeams", "Rewiring", "UnionQueries", "MergeAccounts", "PacketRoute",
               "NearestCharger", "BreakWalls", "CoursePlanner", "ProjectTime", "ShortestRoutes", "FastestRoutes", "TravelVoucher",
               "CableNetwork"]),
     dict(title="Week 4 · Trees and dynamic programming", neetcode="Trees, 1-D Dynamic Programming, 2-D Dynamic Programming",
-         ids=["OrgChart", "NetworkSpan", "OfficeParty", "CourierDistances", "SumDistances", "DiceSums", "FewestCoins",
-              "ChangeCombinations", "OrderedChange", "Bookshop", "TugOfWar", "TreasureWalk", "TypoFixer", "RisingPrices",
-              "CoinLineDuel", "ContractPicker", "GrandTour"]),
+         ids=["OrgChart", "NetworkSpan", "OfficeParty", "CourierDistances", "DiceSums", "FewestCoins",
+              "ChangeCombinations", "OrderedChange", "Bookshop", "TugOfWar", "TreasureWalk", "CommonThread", "TypoFixer",
+              "RisingPrices", "CoinLineDuel", "ContractPicker"]),
 ]
+# NeetCode-style topic tree. Each node is one or more usaco.guide modules (the slug after usaco.guide/ in a
+# problem's hint url); `after` draws the arrows (suggested order); `row` is the tree level. DP is split by type.
+TREE = [
+    dict(id="search", row=0, title="Complete Search", after=[],
+         modules=["bronze/simulation", "bronze/intro-complete", "bronze/complete-rec", "bronze/rect-geo", "bronze/ad-hoc"]),
+    dict(id="hashing", row=1, title="Sets, Maps & Hashing", after=["search"],
+         modules=["bronze/intro-sets", "gold/hashmaps", "gold/hashing"]),
+    dict(id="sorting", row=1, title="Sorting & Greedy", after=["search"],
+         modules=["bronze/intro-sorting", "bronze/intro-greedy", "silver/sorting-custom", "silver/greedy-sorting"]),
+    dict(id="prefix", row=2, title="Prefix Sums", after=["hashing"], modules=["silver/prefix-sums", "silver/more-prefix-sums"]),
+    dict(id="twoptr", row=2, title="Two Pointers", after=["sorting"], modules=["silver/two-pointers"]),
+    dict(id="binsearch", row=2, title="Binary Search", after=["sorting"],
+         modules=["silver/binary-search", "silver/binary-search-sorted-array", "gold/ternary-search"]),
+    dict(id="heaps", row=2, title="Heaps & Sorted Sets", after=["sorting"], modules=["silver/priority-queues", "gold/intro-sorted-sets"]),
+    dict(id="stack", row=3, title="Monotonic Stack", after=["prefix"], modules=["gold/stacks"]),
+    dict(id="rangeq", row=3, title="Range Queries", after=["prefix"], modules=["gold/PURS"]),
+    dict(id="window", row=3, title="Sliding Window", after=["twoptr"], modules=["gold/sliding-window"]),
+    dict(id="graphs", row=3, title="Graph Traversal", after=["binsearch"],
+         modules=["bronze/intro-graphs", "silver/graph-traversal", "silver/flood-fill", "silver/func-graphs"]),
+    dict(id="bits", row=3, title="Bitmasks", after=["heaps"], modules=["silver/intro-bitwise", "gold/meet-in-the-middle"]),
+    dict(id="dp", row=4, title="DP Basics", after=["window"], modules=["gold/intro-dp"]),
+    dict(id="trees", row=4, title="Trees", after=["graphs"], modules=["silver/intro-tree", "gold/tree-euler", "gold/lca-euler"]),
+    dict(id="bfs", row=4, title="BFS Shortest Paths", after=["graphs"], modules=["gold/unweighted-shortest-paths"]),
+    dict(id="dsu", row=4, title="Union-Find & MST", after=["graphs"], modules=["gold/dsu", "gold/mst"]),
+    dict(id="topo", row=4, title="Topological Sort", after=["graphs"], modules=["gold/toposort"]),
+    dict(id="modular", row=4, title="Modular & Combinatorics", after=["bits"], modules=["gold/modular", "gold/combo"]),
+    dict(id="knapsack", row=5, title="Knapsack DP", after=["dp"], modules=["gold/knapsack"]),
+    dict(id="grids", row=5, title="Grid DP", after=["dp"], modules=["gold/paths-grids"]),
+    dict(id="lis", row=5, title="LIS DP", after=["dp"], modules=["gold/lis"]),
+    dict(id="dijkstra", row=5, title="Weighted Shortest Paths", after=["bfs"], modules=["gold/shortest-paths"]),
+    dict(id="numtheory", row=5, title="Number Theory", after=["modular"], modules=["gold/divisibility"]),
+    dict(id="bitdp", row=6, title="Bitmask DP", after=["knapsack"], modules=["gold/dp-bitmasks"]),
+    dict(id="rangedp", row=6, title="Range DP", after=["grids"], modules=["gold/dp-ranges"]),
+    dict(id="digitdp", row=6, title="Digit DP", after=["lis"], modules=["gold/digit-dp"]),
+    dict(id="treedp", row=6, title="Tree DP", after=["trees"], modules=["gold/dp-trees"]),
+    dict(id="reroot", row=7, title="Rerooting DP", after=["treedp"], modules=["gold/all-roots"]),
+]
+
+
+def module_of(p):
+    return p.hint["url"].split("usaco.guide/")[-1].split("#")[0]
+
+
 BY_ID = {p.id: p for p in PROBLEMS}
 assert sorted(sum(GROUPS.values(), [])) == sorted(BY_ID), "every problem must be in exactly one group"
+_mods = [m for n in TREE for m in n["modules"]]
+assert len(_mods) == len(set(_mods)) and {module_of(p) for p in PROBLEMS} == set(_mods), "TREE must cover every module once"
+assert all(a in {n["id"] for n in TREE[:i]} for i, n in enumerate(TREE) for a in n["after"]), "TREE: `after` must name an earlier node"
 assert set(STARRED) <= set(BY_ID), "STARRED names an unknown problem"
 _road = [i for week in ROADMAP for i in week["ids"]]
 assert set(_road) <= set(BY_ID) and len(_road) == len(set(_road)), "ROADMAP names an unknown or repeated problem"

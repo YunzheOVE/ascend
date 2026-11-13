@@ -30,7 +30,8 @@
 ## Overview
 
 - **Run** your `class Solution` on the examples, or **Submit** it against ~30 hidden tests, including large inputs (n ≈ 10⁵) where an O(n²) solution won't finish in the 2 s limit.
-- **A four-week roadmap** of core patterns, plus search, difficulty filters, and a random unsolved pick.
+- **Roadmap:** a NeetCode-style tree of usaco.guide topics, with DP split by type (knapsack, grid, LIS, range, bitmask, digit, tree), plus a 4-week plan of the core interview patterns. Picking a week lights up the topics it covers.
+- Search, difficulty filters, and a random unsolved pick.
 - **Hints and references:** each problem has a hidden pattern hint, a link to its usaco.guide module, and a spoiler solution.
 - **Test** runs your code on your own input (one JSON value per line) and compares it with the reference answer.
 - **Review queue:** a first solve schedules a re-solve in 3 days, then 7, 21 and 60; a miss brings it back tomorrow.
