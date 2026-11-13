@@ -78,6 +78,7 @@
   .crumb { display:flex; align-items:center; gap:10px; min-width:0; }
   .crumb .title { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .crumb .num { color:var(--faint); font-variant-numeric:tabular-nums; }
+  .seq-chip { padding:2px 9px; border-radius:99px; background:var(--surface-2); color:var(--muted); font-size:12px; white-space:nowrap; font-variant-numeric:tabular-nums; }
   .sep { width:1px; height:22px; background:var(--border); }
 
   .btn { display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border-radius:8px; border:1px solid var(--border); background:var(--surface); font-size:14px; font-weight:500; white-space:nowrap; transition:background .12s, border-color .12s; }
@@ -495,12 +496,13 @@
       <path d="M9.5 20L16 13l6.5 7" fill="none" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     ascend<span class="sub hide-sm">· unofficial practice judge for usaco.guide</span></a>
   <div class="crumb" data-show="ws">
-    <a class="btn ghost" href="#/" title="All problems"><svg class="i"><use href="#i-back"/></svg><span class="hide-sm">Problems</span></a>
+    <a class="btn ghost" id="crumbBack" href="#/" title="Back"><svg class="i"><use href="#i-back"/></svg><span class="hide-sm" id="crumbBackLbl">Problems</span></a>
     <span class="sep hide-sm"></span>
     <button class="btn ghost icon" id="prev" title="Previous problem" aria-label="Previous problem"><svg class="i"><use href="#i-left"/></svg></button>
     <button class="btn ghost icon" id="next" title="Next problem" aria-label="Next problem"><svg class="i"><use href="#i-right"/></svg></button>
     <span class="num" id="crumbNum"></span><span class="title" id="crumbTitle"></span>
     <span id="crumbStatus"></span>
+    <span class="seq-chip hide-sm" id="crumbSeq" hidden></span>
   </div>
   <div class="spacer"></div>
   <button class="btn search-btn" id="openPal" title="Search problems (Ctrl+K)"><svg class="i"><use href="#i-search"/></svg><span class="hide-sm">Search</span><kbd class="hide-sm">Ctrl K</kbd></button>
@@ -860,6 +862,7 @@ function renderList() {
   $("#listHead").innerHTML = `<h2>${gi >= 0 ? `<span class="appicon sm g${styleOf(ui.topic)}">${icon("t" + styleOf(ui.topic))}</span>${esc(ui.topic)}` : "All problems"}</h2>
     <span class="count">${shown.length === state.list.length ? shown.length : `${shown.length} of ${state.list.length}`} problems</span>
     ${active ? `<button class="btn ghost" id="clearF">Clear filters</button>` : ""}`;
+  $("#plist").dataset.seq = gi >= 0 ? ui.topic : { all: "All problems", unsolved: "Unsolved", starred: "Starred", solved: "Solved", review: "Review due" }[ui.status];
   $("#plist").innerHTML = shown.length ? shown.map((p, k) => prowHtml(p, k, "#" + p.n)).join("")
     : `<div class="empty-state"><b>No problems match</b>Try another topic, difficulty or search.</div>`;
 }
@@ -897,7 +900,7 @@ function renderRoadmap() {
       <summary><span class="wk-title">${esc(w.title)}</span>${tag}
         <span class="wk-count">${done} / ${all}</span><span class="mini"><i style="width:${100 * done / all}%"></i></span></summary>
       <p class="wk-note">Do these NeetCode 150 topics first: ${esc(w.neetcode)}. Then work through this list in order.</p>
-      <div class="plist">${w.items.map((p, k) => prowHtml(p, k, k + 1 + ".")).join("")}</div>
+      <div class="plist" data-seq="${esc(w.title.split(" · ")[0])}">${w.items.map((p, k) => prowHtml(p, k, k + 1 + ".")).join("")}</div>
     </details>`;
   }).join("");
   const total = weeks.reduce((s, w) => s + w.items.length, 0), solved = weeks.reduce((s, w) => s + solvedOf(w.items), 0);
@@ -1004,7 +1007,7 @@ function openTopic(id) {
   $("#topicTitle").textContent = n.title;
   $("#topicBody").innerHTML = `<div class="topic-meta">${solvedOf(items)} of ${items.length} solved${after.length ? ` · after ${esc(after.join(", "))}` : ""} · usaco.guide:
       ${mods.map(([m, name]) => `<a href="https://usaco.guide/${m}" target="_blank" rel="noopener">${esc(name)}</a>`).join(", ")}</div>
-    <div class="plist">${items.map((p, k) => prowHtml(p, k, "#" + p.n)).join("")}</div>`;
+    <div class="plist" data-seq="${esc(n.title)}">${items.map((p, k) => prowHtml(p, k, "#" + p.n)).join("")}</div>`;
   $("#topicView").hidden = false;
 }
 $("#tree").onclick = e => { const b = e.target.closest("[data-node]"); if (b) openTopic(b.dataset.node); };
@@ -1121,13 +1124,31 @@ function celebrate(from) {
 }
 
 // ---------- workspace ----------
+// Next/previous walk the list you opened the problem from (a week, a roadmap topic, or the filtered problem list),
+// saved when a problem row is clicked. Problems opened another way (search, random) fall back to the full list.
+try { state.seq = JSON.parse(store.get("seq")); } catch { state.seq = null; }
+document.addEventListener("click", e => {
+  const list = e.target.closest(".prow")?.closest(".plist");
+  if (!list) return;
+  state.seq = { label: list.dataset.seq || "Problems", back: location.hash || "#/",
+                ids: [...list.querySelectorAll(".prow")].map(a => a.getAttribute("href").slice("#/p/".length)) };
+  store.set("seq", JSON.stringify(state.seq));
+}, true);
+const curSeq = () => (state.seq?.ids?.includes(state.cur?.id) ? state.seq : null);
+const seqIds = () => curSeq()?.ids || state.list.map(p => p.id);
+
 function updateCrumb() {
-  const i = state.list.findIndex(p => p.id === state.cur.id);
+  const i = state.list.findIndex(p => p.id === state.cur.id), seq = curSeq(), ids = seqIds(), k = ids.indexOf(state.cur.id);
   $("#crumbNum").textContent = "#" + (i + 1);
   $("#crumbTitle").textContent = state.cur.title;
   $("#crumbStatus").innerHTML = statusBadge(state.list[i]?.status);
-  $("#prev").disabled = i <= 0;
-  $("#next").disabled = i >= state.list.length - 1;
+  $("#prev").disabled = k <= 0;
+  $("#next").disabled = k >= ids.length - 1;
+  $("#crumbSeq").hidden = !seq;
+  if (seq) $("#crumbSeq").textContent = `${seq.label} · ${k + 1} / ${ids.length}`;
+  const road = seq?.back === "#/roadmap";
+  $("#crumbBack").href = road ? "#/roadmap" : "#/";
+  $("#crumbBackLbl").textContent = road ? "Roadmap" : "Problems";
 }
 
 async function openProblem(id) {
@@ -1305,7 +1326,7 @@ $("#submit").onclick = () => go("submit");
 $("#reset").onclick = () => {
   if (state.cur && confirm("Replace your code with the starter?")) { editor.setValue(state.cur.starter); store.set("draft:" + state.cur.id, null); }
 };
-const step = d => { const i = state.list.findIndex(p => p.id === state.cur?.id) + d; if (state.list[i]) location.hash = "#/p/" + state.list[i].id; };
+const step = d => { const ids = seqIds(), id = ids[ids.indexOf(state.cur?.id) + d]; if (id) location.hash = "#/p/" + id; };
 $("#prev").onclick = () => step(-1);
 $("#next").onclick = () => step(1);
 function randomUnsolved() {
